@@ -122,18 +122,128 @@ These workflows must be architecturally separate to prevent data leakage and ens
 
 If your project only works on your laptop, the structure is incomplete.
 
+## Separating Data Loading, Training, and Inference
 
+Machine learning workflows have two fundamentally different execution modes that must be kept architecturally separate:
+
+### Training Mode
+- Reads raw data
+- Fits preprocessing transformations
+- Optimizes model parameters
+- Evaluates performance
+- Saves artifacts
+
+### Inference Mode
+- Loads pre-fitted artifacts
+- Applies transformations (no fitting)
+- Generates predictions
+- Returns results
+
+**When these modes are mixed, data leakage occurs.** The most common failure is preprocessing getting refit at prediction time, which uses information from the test/prediction data to transform that same data — a fundamental violation of ML discipline.
+
+### Data Loading Layer
+**Responsibility:** Load raw data without modification.
+
+Located in `src/data_preprocessing.py`:
+- Validates file paths
+- Ensures schema consistency
+- Returns raw data unchanged
+- Does not split, fit, or transform
+
+### Training Layer
+**Responsibility:** Fit transformations, train models, save artifacts.
+
+Located in `src/train.py`:
+- Loads raw data via data loading layer
+- Splits into train/test
+- Fits preprocessing pipeline on training data only
+- Fits model on processed training data
+- Evaluates on test data
+- Saves both pipeline and model artifacts
+
+Key principle: **The test set never participates in fitting.**
+
+### Inference Layer
+**Responsibility:** Load artifacts and generate predictions without refitting.
+
+Located in `src/predict.py`:
+- Loads saved pipeline artifact
+- Loads saved model artifact
+- Applies `.transform()`, never `.fit_transform()`
+- Generates predictions
+- Returns structured results
+
+Key principle: **Uses only `transform()`, never `fit()`.**
+
+### The Separation Enforced by Structure
+
+```
+Training Flow:
+Raw Data → Load → Split → Fit Preprocessing → Fit Model → Save Artifacts → Evaluate
+
+Inference Flow:
+New Data → Load Artifacts → Transform (no fit) → Predict → Return Results
+```
+
+Notice: Training and inference **never import each other's logic**. This architectural separation prevents accidental refitting and ensures reproducibility.
+
+## What Each Module Does
 
 - `src/config.py` keeps file paths, target column, and model hyperparameters in one place.
-- `src/data_preprocessing.py` handles loading, cleaning, and train/test splitting.
-- `src/feature_engineering.py` builds reusable derived features and a preprocessing pipeline.
-- `src/train.py` fits the model and returns the trained artifact.
-- `src/evaluate.py` returns metrics as a dictionary instead of printing them.
-- `src/persistence.py` saves fitted artifacts to disk.
-- `src/predict.py` loads artifacts and generates predictions on new data.
-- `main.py` orchestrates the full workflow.
+- `src/data_preprocessing.py` handles loading, cleaning, and train/test splitting. It does not fit transformations here; that happens only during training.
+- `src/feature_engineering.py` builds the preprocessing pipeline (encoders, scalers). The pipeline is fitted only in `train.py`, never during inference.
+- `src/train.py` fits the model and returns the trained artifact. It is the only place where fitting happens. It does not generate predictions.
+- `src/evaluate.py` returns metrics as a dictionary instead of printing them. It computes performance on a held-out test set.
+- `src/persistence.py` saves fitted artifacts to disk and loads them for inference. It does not retrain.
+- `src/predict.py` loads artifacts and generates predictions on new data. It never refits anything. It uses `transform()`, not `fit_transform()`.
+- `main.py` orchestrates the full training workflow. It does not contain inference logic.
 
-## Module Structure Plan
+## Common Mistakes in Separation
+
+### Refitting During Prediction
+**Mistake:** Using `fit_transform()` in prediction logic instead of just `transform()`.
+```python
+# WRONG: Refits on new data
+preprocessed = pipeline.fit_transform(new_data)  # Uses new_data to fit scalers!
+
+# CORRECT: Applies saved fit
+preprocessed = pipeline.transform(new_data)  # Only applies, never fits
+```
+This silently causes predictions to depend on the specific instances being predicted, which is data leakage.
+
+### Duplicate Preprocessing Logic
+**Mistake:** Copy-pasting preprocessing code from training into prediction.
+Now you have two versions. When you fix a bug in one, you must remember to fix the other.
+
+**Solution:** Write preprocessing once in `feature_engineering.py`. Save and load the fitted pipeline.
+
+### Training Logic Mixed with Inference
+**Mistake:** Having `train.py` import and call prediction functions, or vice versa.
+**Solution:** They should never import each other. Dependencies flow downward:
+```
+config → persistence → feature_engineering → train.py (uses train-specific logic)
+config → persistence → feature_engineering → predict.py (uses inference-specific logic)
+```
+
+### Hardcoded File Paths in Multiple Files
+**Mistake:** Model path defined in both `train.py` and `predict.py`.
+**Solution:** Centralize in `config.py` so both modules use the same path.
+
+### No Model Artifact Saved
+**Mistake:** Training produces a model but it exists only in memory for the duration of the script.
+**Solution:** Always save fitted transformers and models in `train.py`. Load them in `predict.py`.
+
+## Verifying the Separation
+
+1. **Can you run inference without training?** Yes — `predict.py` only loads artifacts.
+2. **Can you modify training without touching inference?** Yes — they are independent.
+3. **Does inference ever call `fit()`?** No — only `transform()`.
+4. **Is preprocessing defined in one place?** Yes — in `feature_engineering.py`.
+5. **Are all file paths centralized?** Yes — in `config.py`.
+
+If any of these fail, the separation is incomplete.
+
+
 
 The project follows a clean `Data -> Preprocessing -> Features -> Model -> Evaluation -> Prediction` flow so each stage stays isolated and reusable.
 
