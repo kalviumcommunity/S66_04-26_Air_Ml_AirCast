@@ -398,6 +398,257 @@ If you get the problem type wrong, everything downstream is misaligned. If you o
 
 Structure your thinking. Define the problem. Then build the solution.
 
+## Defining Feature Columns and Target Variables
+
+Before any model training can begin, you must answer this question with absolute clarity:
+
+**What exactly am I predicting, and what information am I allowed to use to predict it?**
+
+This step determines whether your model is valid, whether evaluation is honest, and whether it will work in production. Get this wrong and no amount of algorithm sophistication will fix it.
+
+### Understanding Your Target Variable
+
+The target variable is the column you're predicting — the business outcome of interest.
+
+**For the air pollution project, your target depends on your problem type choice:**
+
+**If predicting risk category:**
+- **Column:** Risk_Level, AQI_Category, or similar
+- **Type:** Multi-class classification
+- **Possible values:** "Good", "Moderate", "Unhealthy", "Hazardous"
+- **Meaning:** What risk category does this day/location belong to?
+
+**If predicting AQI value:**
+- **Column:** AQI or Air_Quality_Index
+- **Type:** Regression
+- **Possible values:** Numbers 0-500
+- **Meaning:** What is the actual AQI value?
+
+### The Three Conditions Every Target Must Satisfy
+
+1. **Clearly defined and measurable** — Point to a specific column with specific values
+2. **Available in historical data** — You have labeled examples for training
+3. **Represents a real business outcome** — The target is what you actually care about
+
+### The Golden Rule of Feature Validity
+
+**Features should represent information that is available at prediction time.**
+
+This is non-negotiable. This is what separates valid ML systems from broken ones.
+
+**Example of invalid feature (leakage):**
+- Predicting pollution risk and including "Actual_Recorded_AQI_Value" from post-event sensors
+- This information only exists after the day has occurred
+- Invalid for real-world prediction at 6:00 AM when you need a forecast
+
+**Example of valid features:**
+- Historical pollution levels from the past 30 days (already collected, known today)
+- Weather forecast (available at prediction time)
+- Location metadata (known today)
+- Time of year/day of week (always available)
+
+### Understanding Feature Columns
+
+Feature columns are input variables used to make predictions. They must represent signals available when you actually need to make a prediction.
+
+For your air pollution project, valid features might include:
+
+| Feature | Why Valid | When Available |
+|---------|-----------|-----------------|
+| Pollution_History_7days | Historical measurement | Immediately |
+| Temperature_Forecast | Weather data | Current forecast |
+| Humidity | Current observation | Real-time sensor |
+| Day_of_Week | Temporal pattern | Always known |
+| Location_ID | Geographic marker | Always known |
+| Hour_of_Day | Temporal pattern | Always known |
+
+### Feature Selection Must Be Intentional
+
+**Do NOT use every column as a feature.**
+
+For each candidate column, ask:
+
+1. Is this available at prediction time? (Yes → Keep | No → Exclude)
+2. Does this help predict the target? (Yes → Keep | No → Exclude)
+3. Is this derived from the target? (No → Keep | Yes → Exclude as leakage)
+4. Does this represent post-outcome information? (No → Keep | Yes → Exclude)
+
+### Categories of Columns to Exclude
+
+**Identifiers** (ID, Location_ID, Sensor_ID)
+- Problem: Unique identifiers carry no generalizable signal
+- Decision: Exclude unless the ID encodes meaningful information
+
+**Raw Timestamps**
+- Problem: Models cannot learn from "2025-03-15 14:23:00"
+- Solution: Derive meaningful features instead:
+  - Day_of_Week (0-6)
+  - Hour_of_Day (0-23)
+  - Month_of_Year (1-12)
+  - Is_Weekend (binary)
+
+**Target-Derived Columns**
+- Problem: Only exist because the target is known; impossible to have at prediction time
+- Example: "Days_Until_Pollution_Spike" (calculated after the spike occurs)
+- Decision: Always exclude
+
+**Post-Event Data**
+- Problem: Information generated after the prediction decision
+- Example: Emergency alerts issued based on forecasted risk (but we're trying to make the forecast)
+- Decision: Exclude any information that exists after you need the prediction
+
+### Separating X and y: The Code Pattern
+
+Before any preprocessing, separate features from target explicitly:
+
+```python
+# config.py
+TARGET_COLUMN = 'AQI_Category'  # or 'AQI_Value' for regression
+
+NUMERICAL_FEATURES = [
+    'temperature',
+    'humidity',
+    'wind_speed',
+    'pollution_pm25_7day_avg',
+    'pollution_pm10_7day_avg'
+]
+
+CATEGORICAL_FEATURES = [
+    'day_of_week',
+    'is_weekend',
+    'season',
+    'location_id'
+]
+
+EXCLUDED_COLUMNS = [
+    'sensor_id',           # Identifier
+    'timestamp',           # Raw time (use derived features)
+    'actual_aqi_afternoon' # Post-event (only known after noon)
+]
+
+# Validation
+ALL_FEATURES = NUMERICAL_FEATURES + CATEGORICAL_FEATURES
+assert TARGET_COLUMN not in ALL_FEATURES, "Target leaked into features!"
+```
+
+In your data preprocessing module:
+
+```python
+from config import TARGET_COLUMN, ALL_FEATURES
+
+# Load data
+df = pd.read_csv('data/raw/pollution_data.csv')
+
+# Validate
+assert TARGET_COLUMN in df.columns, f"Target '{TARGET_COLUMN}' not found"
+assert TARGET_COLUMN not in ALL_FEATURES, "Target in features!"
+for col in ALL_FEATURES:
+    assert col in df.columns, f"Feature '{col}' not found in data"
+
+# Separate X and y BEFORE any preprocessing
+X = df[ALL_FEATURES]
+y = df[TARGET_COLUMN]
+
+print(f"Features shape: {X.shape}")
+print(f"Target shape: {y.shape}")
+print(f"Target distribution:\n{y.value_counts()}")
+```
+
+**Critical:** Separation happens BEFORE preprocessing. Never fit transformations on all data, then split.
+
+### The Most Dangerous Mistake: Data Leakage
+
+Data leakage produces models that:
+- Achieve 95%+ training accuracy
+- Achieve 95%+ cross-validation accuracy
+- Achieve 50% accuracy in production ❌
+
+You never catch the problem until real deployment.
+
+**Common sources of leakage:**
+
+**Target Leakage:**
+```python
+# WRONG: Using information that only exists after the outcome
+# Including "Alert_Level_Issued" when predicting pollution
+# (Alerts are issued AFTER pollution is high, so this is leakage)
+```
+
+**Temporal Leakage:**
+```python
+# WRONG: Including future information
+# Using "Tomorrow_Temperature" to predict "Today_Pollution"
+# You don't have tomorrow's data when making today's prediction
+```
+
+**Train/Test Contamination:**
+```python
+# WRONG: Fitting preprocessing on all data
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)  # Uses test set statistics!
+X_train, X_test = train_test_split(X_scaled, y)
+
+# CORRECT: Split first, fit on training only
+X_train, X_test, y_train, y_test = train_test_split(X, y)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)  # Fit only on train
+X_test_scaled = scaler.transform(X_test)        # Apply to test
+```
+
+### Documentation: Feature and Target Definition
+
+For your README, document clearly:
+
+```
+## Feature and Target Definition
+
+### Target Variable
+- **Column:** AQI_Category
+- **Type:** Multi-class Classification
+- **Values:** ["Good", "Moderate", "Unhealthy", "Hazardous"]
+- **Business Meaning:** Risk level for outdoor activity recommendations
+
+### Features (11 total)
+
+#### Numerical (5)
+- temperature: Current temperature (°C), available from weather API
+- humidity: Current humidity (%), available from weather API
+- wind_speed: Current wind speed (km/h), available from weather API
+- pollution_pm25_7day_avg: 7-day average PM2.5 (µg/m³), from historical sensors
+- pollution_pm10_7day_avg: 7-day average PM10 (µg/m³), from historical sensors
+
+#### Categorical (6)
+- day_of_week: Day (0=Monday, 6=Sunday), always available
+- is_weekend: Binary (0/1), always available
+- season: Season (Winter/Spring/Summer/Fall), always available
+- location_id: Location code (e.g., "DL_1", "MH_2"), always available
+- hour_of_day: Hour (0-23), always available
+- pollution_trend: Increasing/Stable/Decreasing, from 7-day history
+
+### Excluded Columns
+- sensor_id: Unique identifier, no predictive value
+- timestamp: Raw datetime (use derived temporal features instead)
+- actual_aqi_afternoon: Post-event value (only known after 3 PM)
+- alert_issued: Post-decision information (alert issued after high pollution detected)
+
+### Leakage Prevention
+✓ All features available before prediction time
+✓ No post-outcome information included
+✓ Train/test split performed BEFORE preprocessing
+✓ Preprocessing fitted on training data only
+```
+
+### Before Writing Code: Answer These Questions
+
+1. **What is my target column?** (Be specific: column name and data type)
+2. **What does each target value represent?** (Business meaning, not just "0" or "1")
+3. **What features do I have available?** (List them)
+4. **For each feature: Would I have this information at prediction time?** (Yes/No for each)
+5. **Which columns am I excluding and why?** (ID? Leakage? Not available at predict time?)
+6. **Have I separated X and y explicitly?** (Before preprocessing?)
+
+If you cannot answer all of these clearly, stop and clarify before proceeding.
+
 The project follows a clean `Data -> Preprocessing -> Features -> Model -> Evaluation -> Prediction` flow so each stage stays isolated and reusable.
 
 - `main.py` is the entry point. It imports the functions it needs and runs them in sequence.
