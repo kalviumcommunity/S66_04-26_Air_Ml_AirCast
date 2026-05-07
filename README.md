@@ -1024,6 +1024,393 @@ Before writing any model code in this sprint:
 
 This ensures your model training is grounded in real understanding, not blind execution.
 
+## Data Splitting: Training vs Testing Separation
+
+Before a model can be trusted, it must be evaluated on data it has never seen before. If you train and evaluate on the same dataset, you are not measuring learning — you are measuring memorization.
+
+A proper train-test split creates a boundary between data used for learning and data used for honest evaluation. Without this separation, performance metrics are misleading and model quality cannot be assessed reliably.
+
+### Why Data Splitting Is Essential
+
+When you evaluate a model on the same data it learned from:
+
+- The model memorizes patterns in the training data
+- Overfitting goes undetected
+- Metrics appear artificially high (80%+ accuracy is common)
+- Deployment performance collapses in production ❌
+
+A train-test split simulates the real-world scenario:
+
+```
+Training Data (80%)  → Fit transformations → Learn model parameters
+                                    ↓
+                              Model (with patterns)
+                                    ↓
+Testing Data (20%)  → Apply transformations → Evaluate on unseen data
+```
+
+If performance on test data is strong, you have evidence of generalization. If it drops significantly, you likely have overfitting.
+
+### Training Set vs Testing Set
+
+**Training Set (typically 70-80% of data)**
+- Used to:
+  - Fit preprocessing transformations (scalers, encoders)
+  - Learn model parameters (weights, decision boundaries)
+  - Tune hyperparameters via cross-validation
+- The model is allowed to see this data
+
+**Testing Set (typically 20-30% of data)**
+- Used to:
+  - Evaluate final model performance
+  - Compute unbiased metrics
+  - Simulate unseen real-world inputs
+- The model must never learn from this data
+- Remains untouched until final evaluation
+
+### Standard Train-Test Split
+
+The most common approach for non-temporal data:
+
+```python
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,           # 20% for testing
+    random_state=42,         # Ensures reproducibility
+    shuffle=True             # Default; randomly shuffles before split
+)
+
+print(f"Training set: {X_train.shape[0]} samples")
+print(f"Testing set: {X_test.shape[0]} samples")
+```
+
+**Why `random_state=42`?**
+- Ensures the same split every time code runs
+- Critical for reproducibility
+- Use any integer; the value doesn't matter, only that it's fixed
+
+### Stratified Splitting (Essential for Classification)
+
+In classification problems, especially imbalanced ones, random splitting can distort class distribution.
+
+**Problem:**
+If 10% positive and 90% negative samples:
+- Random split might give: 12% positive in train, 5% positive in test
+- Test set is unrepresentative
+
+**Solution: Stratified split** — Preserves class proportions:
+
+```python
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y               # Key: preserves class distribution
+)
+
+# Verify stratification worked
+print("Train class distribution:")
+print(y_train.value_counts(normalize=True))
+
+print("Test class distribution:")
+print(y_test.value_counts(normalize=True))
+# Both should show similar proportions (within random variation)
+```
+
+**For your air pollution project:**
+```python
+# If predicting risk category (classification)
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y  # Ensures both sets have similar risk distributions
+)
+```
+
+### The Critical Rule: Split Before Any Fitting
+
+**This is the most important rule for preventing data leakage.**
+
+**WRONG - Leakage:**
+```python
+# Fitting scaler on ENTIRE dataset
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)  # Mean/std computed from ALL data
+
+# THEN splitting
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y)
+```
+
+Problem: Scaler statistics include information from test set. Test set is contaminated.
+
+**CORRECT - No leakage:**
+```python
+# Split FIRST
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# THEN fit scaler only on training data
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)    # Fit on train only
+X_test_scaled = scaler.transform(X_test)          # Apply to test
+
+# X_test_scaled uses statistics from X_train only
+```
+
+**Sequence that prevents leakage:**
+```
+1. Load raw data
+2. Define features (X) and target (y)
+3. Split into train/test
+4. Fit preprocessing on training data only
+5. Apply preprocessing to test data
+6. Train model on processed training data
+7. Evaluate on processed test data
+```
+
+**Violating this sequence is the #1 cause of invalid evaluation.**
+
+### Time-Based Splitting (For Temporal/Sequential Data)
+
+For time-series or chronological datasets, random splitting is incorrect.
+
+**Example:**
+Predicting pollution levels based on historical trends.
+
+**WRONG - Random split introduces temporal leakage:**
+```python
+# Shuffles randomly; future data might be in training set
+X_train, X_test, y_train, y_test = train_test_split(X, y)
+```
+
+**CORRECT - Time-ordered split:**
+```python
+# Ensure temporal order
+df = df.sort_values('date')
+
+train_size = int(len(df) * 0.8)
+
+# Train on earlier data, test on later data
+X_train = X.iloc[:train_size]
+X_test = X.iloc[train_size:]
+y_train = y.iloc[:train_size]
+y_test = y.iloc[train_size:]
+```
+
+**For your air pollution project:**
+If your dataset has dates/timestamps:
+```python
+# Time-ordered split
+df = df.sort_values('timestamp')
+
+train_idx = int(len(df) * 0.8)
+train_df = df.iloc[:train_idx]
+test_df = df.iloc[train_idx:]
+
+X_train = train_df[ALL_FEATURES]
+y_train = train_df[TARGET_COLUMN]
+
+X_test = test_df[ALL_FEATURES]
+y_test = test_df[TARGET_COLUMN]
+```
+
+Random splitting in time-series creates unrealistic evaluation where the model learns from future data to predict the past.
+
+### Common Data Leakage Mistakes During Splitting
+
+**Mistake 1: Fitting transformers before splitting**
+```python
+# WRONG
+scaler.fit_transform(X)  # Uses test data statistics
+X_train, X_test = train_test_split(X_scaled, y)
+```
+
+**Mistake 2: Feature selection on full dataset**
+```python
+# WRONG
+# Computing feature importance on all data
+important_features = df[['A', 'B', 'C']].corr(df['target']).abs().nlargest(3).index
+X = df[important_features]
+X_train, X_test = train_test_split(X, y)
+```
+
+**Mistake 3: Oversampling before splitting**
+```python
+# WRONG
+from imblearn.over_sampling import SMOTE
+X_resampled, y_resampled = SMOTE().fit_resample(X, y)  # Includes test data
+X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled)
+```
+
+**Correct resampling:**
+```python
+# RIGHT
+X_train, X_test, y_train, y_test = train_test_split(X, y)
+
+# Resample ONLY training data
+from imblearn.over_sampling import SMOTE
+X_train_resampled, y_train_resampled = SMOTE().fit_resample(X_train, y_train)
+# X_test remains unchanged
+```
+
+**Mistake 4: Using target statistics from full data**
+```python
+# WRONG
+# Creating feature that uses target from entire dataset
+df['class_rate'] = df.groupby('location')['target'].transform('mean')
+X_train, X_test = train_test_split(df[features], df['target'])
+```
+
+### Verifying Your Split
+
+After splitting, always verify:
+
+```python
+# Check shapes
+print(f"Training set: {X_train.shape}")
+print(f"Testing set: {X_test.shape}")
+print(f"Total: {X_train.shape[0] + X_test.shape[0]}")
+
+# Check class distribution (for classification)
+print("Training target distribution:")
+print(y_train.value_counts(normalize=True))
+
+print("Testing target distribution:")
+print(y_test.value_counts(normalize=True))
+
+# Check for overlap (should be zero)
+train_indices = set(X_train.index)
+test_indices = set(X_test.index)
+overlap = train_indices.intersection(test_indices)
+print(f"Overlap: {len(overlap)} samples")  # Should print 0
+```
+
+This verification prevents silent data contamination.
+
+### Understanding Cross-Validation
+
+Train-test split evaluates once. For more robust evaluation:
+
+**K-Fold Cross-Validation:**
+```python
+from sklearn.model_selection import cross_val_score
+
+# Use training data only
+cv_scores = cross_val_score(
+    model,
+    X_train,
+    y_train,
+    cv=5,  # 5 folds
+    scoring='accuracy'
+)
+
+print(f"CV scores: {cv_scores}")
+print(f"Mean CV score: {cv_scores.mean():.3f} ± {cv_scores.std():.3f}")
+```
+
+**Important:**
+- Cross-validation is for model selection and hyperparameter tuning
+- Uses only training data, splits into multiple folds
+- Final evaluation is still performed on the separate test set
+- Test set remains untouched during cross-validation
+
+### Best Practices for Data Splitting
+
+1. ✓ Always split BEFORE fitting any transformations
+2. ✓ Use stratified split for classification
+3. ✓ Use time-based split for temporal data
+4. ✓ Fix random_state for reproducibility
+5. ✓ Never touch test set until final evaluation
+6. ✓ Verify split (shapes, class distribution)
+7. ✓ Document split strategy in README
+
+### Documenting Your Split Strategy
+
+Add to your README:
+
+```
+## Data Splitting Strategy
+
+- **Test Size:** 20% of data reserved for final evaluation
+- **Split Method:** Stratified (preserves class distribution)
+- **Random State:** 42 (ensures reproducibility)
+- **Timing:** Split performed before any preprocessing
+- **Train Set:** {X_train.shape[0]} samples used to fit preprocessing and train model
+- **Test Set:** {X_test.shape[0]} samples used only for final evaluation
+- **Preprocessing:** Transformers fitted on training data only
+- **Test Data:** Never used during model development, hyperparameter tuning, or cross-validation
+```
+
+### Common Mistakes to Avoid
+
+**Mistake 1: Evaluating only on training data**
+- Model will appear to perform excellently but fail in production
+
+**Mistake 2: Scaling before splitting**
+- Test data statistics contaminate the scaling transformation
+
+**Mistake 3: Forgetting stratification in classification**
+- Test set may have different class balance than real deployment
+
+**Mistake 4: Random splitting for time-series data**
+- Allows model to learn from future data to predict past
+
+**Mistake 5: Using test set during hyperparameter tuning**
+- Test set should be completely unseen until final evaluation
+
+Each of these leads to invalid performance estimates and false confidence.
+
+### Before Building Your Model
+
+Implement data splitting correctly:
+
+```python
+# In your data preprocessing module
+from config import TARGET_COLUMN, ALL_FEATURES
+
+# Load data
+df = pd.read_csv('data/raw/pollution_data.csv')
+
+# Define X and y
+X = df[ALL_FEATURES]
+y = df[TARGET_COLUMN]
+
+# Split (BEFORE any fitting)
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y  # For classification
+)
+
+# Verify
+print(f"Train: {X_train.shape}, Test: {X_test.shape}")
+print(f"Train distribution:\n{y_train.value_counts(normalize=True)}")
+print(f"Test distribution:\n{y_test.value_counts(normalize=True)}")
+
+# NOW fit preprocessing on training data only
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+```
+
+### Closing Reflection
+
+A powerful model trained on improperly split data is not powerful — it is misleading.
+
+The train-test boundary is sacred. Once contaminated, evaluation becomes meaningless.
+
+**Split carefully. Validate the split. Protect the test set.**
+
+Honest evaluation is the foundation of trustworthy machine learning.
+
 The project follows a clean `Data -> Preprocessing -> Features -> Model -> Evaluation -> Prediction` flow so each stage stays isolated and reusable.
 
 - `main.py` is the entry point. It imports the functions it needs and runs them in sequence.
