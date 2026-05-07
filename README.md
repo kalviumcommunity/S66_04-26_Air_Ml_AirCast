@@ -118,26 +118,120 @@ Training and prediction are separated on purpose.
 7. Generate predictions in `predict.py`.
 8. Orchestrate the full flow from `main.py`.
 
-## How To Use
+## Setup Instructions
 
-1. Create a virtual environment with `python -m venv venv`.
-2. Activate it with `venv\\Scripts\\activate` on Windows or `source venv/bin/activate` on macOS/Linux.
-3. Install dependencies with `pip install -r requirements.txt`.
-4. Put your CSV file in `data/raw/` and update `src/config.py` with the correct file path and column names.
-5. Define the categorical and numerical columns in `Config`.
-6. Run `python main.py` to train the model, evaluate it, and save artifacts.
-7. When the environment is ready, freeze exact versions with `pip freeze > requirements.txt`.
+### Prerequisites
 
-## Environment Notes
+- Python 3.9 or higher
+- pip (comes with Python)
 
-- Keep `venv/` out of version control.
-- Avoid mixing global Python packages with project-specific packages.
-- Recreate the same environment later with `pip install -r requirements.txt`.
+### 1. Create a Virtual Environment
+
+Inside the project directory:
+
+```bash
+python -m venv venv
+```
+
+This creates an isolated environment for this project.
+
+### 2. Activate the Virtual Environment
+
+**On macOS/Linux:**
+```bash
+source venv/bin/activate
+```
+
+**On Windows:**
+```bash
+venv\Scripts\activate
+```
+
+Your terminal prompt should change to show `(venv)` when activated.
+
+### 3. Install Dependencies
+
+Inside the activated environment:
+
+```bash
+pip install -r requirements.txt
+```
+
+This installs all required libraries with their exact pinned versions.
+
+### 4. Verify Installation
+
+Check that all packages installed correctly:
+
+```bash
+pip list
+```
+
+### 5. Run the ML Pipeline
+
+1. Put your CSV data file in `data/raw/`.
+2. Update `src/config.py` with the correct file path, column names, and target variable.
+3. Run the full pipeline:
+
+```bash
+python main.py
+```
+
+### 6. Deactivate the Environment (When Done)
+
+```bash
+deactivate
+```
+
+## Dependency Management
+
+This project uses exact version pinning in `requirements.txt` to ensure reproducibility. Every developer and deployment should use the same library versions.
+
+### Why Exact Versions Matter
+
+- Model serialization formats may change between library versions.
+- Preprocessing behavior may shift slightly, affecting results.
+- Deprecations can become runtime errors in newer versions.
+- Evaluation metrics depend on consistent numerical computation.
+
+Without version pinning, two developers can get different results from the same data.
+
+### Adding New Dependencies
+
+If you need to add a new package:
+
+1. Install it in your virtual environment: `pip install package-name`
+2. Find its exact version: `pip show package-name`
+3. Add the line to `requirements.txt` with exact version: `package-name==x.y.z`
+4. Commit the updated `requirements.txt` to the repository
+
+### Testing Reproducibility
+
+Before submission, verify your environment is reproducible:
+
+1. Deactivate the current environment: `deactivate`
+2. Delete the `venv/` folder
+3. Create a fresh environment: `python -m venv venv`
+4. Activate it and install from `requirements.txt`
+5. Run `python main.py` — it should work identically
+
+If it fails, your dependencies are not fully specified.
+
+## Environment Best Practices
+
+- Always work inside an activated virtual environment.
+- Keep `venv/` out of version control (it's in `.gitignore`).
+- Never mix global and project-specific packages.
+- Pin exact versions for ML projects, not version ranges.
+- Update `requirements.txt` whenever you add or remove a dependency.
+- Document any special setup steps in this README.
 
 ## Notes
 
 - The scaffold is intentionally generic so it can be adapted to any tabular ML classification task.
 - `Config.categorical_columns` and `Config.numerical_columns` must be set before the workflow can run.
+- Dependencies are pinned with exact versions to prevent silent failures from library updates.
+- Reproducibility depends on consistent code, data, random seeds, AND library versions.
 
 ## Project Plan
 
