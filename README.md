@@ -243,7 +243,160 @@ config → persistence → feature_engineering → predict.py (uses inference-sp
 
 If any of these fail, the separation is incomplete.
 
+## Understanding the Problem Type Before Training
 
+Before writing any model code, you must clearly understand what kind of prediction problem you are solving. This decision determines which algorithms to use, which metrics to measure, and how success is defined. **Getting the problem type right is more important than algorithm choice.**
+
+### Supervised Learning Framework
+
+All supervised learning follows the same pattern:
+
+```
+Input Features (X) + Correct Answers (y) → Training → Model → Predictions on New Data
+```
+
+The model learns relationships from labeled historical data and applies them to new, unseen data. Your job is to:
+1. Understand what you're predicting (the target variable)
+2. Identify the type of prediction task
+3. Choose appropriate algorithms and metrics
+4. Evaluate honestly
+
+### The Fundamental Distinction: Classification vs Regression
+
+**Classification** — Predicting which **category** an example belongs to
+- Output: A discrete label from a fixed set of possibilities
+- Examples:
+  - Spam vs Not Spam (binary)
+  - Low risk, Medium risk, High risk (multi-class)
+  - Multiple labels: {Action, Comedy} (multi-label)
+- Appropriate metrics: Accuracy, Precision, Recall, F1, ROC-AUC
+- Algorithms: Logistic Regression, Decision Trees, Random Forest, SVM
+
+**Regression** — Predicting a **continuous numerical value**
+- Output: A number on a continuous scale
+- Examples:
+  - House price: $285,000
+  - Air quality index: 125 (on scale 0-500)
+  - Temperature: 23.5°C
+  - Count of customers: 450
+- Appropriate metrics: MAE, RMSE, R²
+- Algorithms: Linear Regression, Random Forest Regressor, Gradient Boosting
+
+### For This Air Pollution Project
+
+Your choice determines the entire pipeline:
+
+**If you predict AQI category** (e.g., "Good", "Moderate", "Unhealthy", "Hazardous"):
+- **Problem type:** Multi-class classification
+- **Target looks like:** Categorical column with 4-6 distinct categories
+- **Success metric:** F1 score, confusion matrix, recall (catching hazardous days matters most)
+- **Challenge:** Classes may be imbalanced (some AQI levels are rare)
+- **Evaluation question:** "Did we correctly categorize the risk level?"
+
+**If you predict actual AQI value** (e.g., 0 to 500 scale):
+- **Problem type:** Regression (bounded)
+- **Target looks like:** Numerical column with values between 0-500
+- **Success metric:** MAE (mean absolute error), RMSE, R²
+- **Challenge:** Non-linear relationships; extreme values may be rare
+- **Evaluation question:** "How close is our prediction to the true AQI?"
+
+**Decision framework:**
+- What does your dataset's target column contain? Categories or numbers?
+- What does the business need? Risk decisions (classification) or precise values (regression)?
+- What metrics matter? Detecting outliers (regression)? Catching a specific class (classification)?
+
+### Common Mistakes When Identifying Problem Type
+
+**Mistake 1: Treating regression as classification unnecessarily**
+- You have AQI values (0-500) but you bin them into Low/Medium/High.
+- Why it's wrong: You lose information. 240 and 260 are both "Moderate" but very different.
+- When to do it: Only if the business truly only cares about broad categories.
+
+**Mistake 2: Treating classification as regression**
+- You encode risk levels as 1, 2, 3 and train a regression model.
+- Why it's wrong: 2 is not "twice" as much as 1. The numbers imply magnitude that doesn't exist.
+- Exception: Ordinal classification (satisfaction levels with natural order) may work, but ordinal regression models are more appropriate.
+
+**Mistake 3: Ignoring class imbalance**
+- You have 95% "Low" risk days and 5% "High" risk days.
+- A model that always predicts "Low" achieves 95% accuracy.
+- Why it's wrong: Accuracy is misleading when classes are imbalanced.
+- Solution: Use Precision, Recall, F1 score, or ROC-AUC instead.
+
+**Mistake 4: Using metrics that don't match the problem**
+- Reporting accuracy for imbalanced classification
+- Using accuracy for regression (doesn't make sense)
+- Using MAE for classification (wrong data type)
+- Why it's wrong: You're optimizing for the wrong thing
+
+### Evaluation Strategy
+
+**For Classification (Risk Categories):**
+```
+1. Confusion matrix — which categories are confused?
+2. Per-class metrics — ensure all risk levels are predicted well
+3. Macro F1 score — average across all classes, unweighted
+4. Recall for high-risk days — catching dangerous days is usually priority
+5. Visualize: confusion matrix heatmap, per-class precision/recall bar chart
+```
+
+**For Regression (AQI Values):**
+```
+1. MAE (Mean Absolute Error) — average difference in AQI points
+   → Interpretable: "On average, we're off by X AQI points"
+2. RMSE (Root Mean Squared Error) — penalizes large errors
+3. R² (Coefficient of Determination) — how much variance explained
+4. Residual plots — are errors systematic or random?
+5. Visualize: predicted vs actual scatter plot, residuals over time
+```
+
+### Before Writing Code, Answer These Questions
+
+1. **What is the target variable name in your dataset?**
+   - Look at the column header and data type
+
+2. **Is it categorical or numerical?**
+   - Categorical → Classification
+   - Numerical → Regression
+
+3. **How many distinct values?**
+   - Exactly 2 → Binary classification
+   - 3+ categories → Multi-class classification
+   - Continuous range → Regression
+
+4. **What does success look like in business terms?**
+   - "Catch all dangerous air quality days" → Classification, optimize recall
+   - "Predict next month's average AQI within 10 points" → Regression, optimize MAE
+   - "Categorize pollution risk for public alerts" → Classification, optimize F1
+
+5. **Which 2-3 metrics will you optimize for?**
+   - Write them down. This is your north star during modeling.
+
+### The Dependency: Problem Type → Algorithms → Metrics → Code
+
+```
+Problem Type Decision
+    ↓
+Appropriate Algorithm Families
+    ↓
+Meaningful Evaluation Metrics
+    ↓
+Model Code, Pipeline Code, Training Procedure
+```
+
+If you get the problem type wrong, everything downstream is misaligned. If you optimize for the wrong metric, you'll build a model that doesn't solve the business problem.
+
+**This is why the first question is not "which algorithm should I use?" but "what problem am I solving?"**
+
+### Next Steps
+
+1. Open your dataset in a notebook
+2. Answer the 5 questions above
+3. Document your answers in a comment at the top of `main.py`
+4. Check that your team agrees with the problem type
+5. Then design your model, pipeline, and evaluation
+
+Structure your thinking. Define the problem. Then build the solution.
 
 The project follows a clean `Data -> Preprocessing -> Features -> Model -> Evaluation -> Prediction` flow so each stage stays isolated and reusable.
 
