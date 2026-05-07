@@ -59,6 +59,65 @@ Import rules for the project:
 
 This structure makes the repository easier to test, easier to review, and safer to extend when the model or dataset changes.
 
+The full sprint assignment plan is documented in [PROJECT_PLAN.md](PROJECT_PLAN.md).
+
+## Lesson Plan Summary
+
+This repository is organized around the lesson idea that structure matters more than algorithm choice once an ML project grows beyond a notebook.
+
+### Why Structure Matters
+
+- Notebooks are fine for exploration, but they become fragile when execution order matters.
+- Functions make preprocessing, training, evaluation, and prediction reusable and testable.
+- Modules make it possible to split responsibilities so one file does not control the whole workflow.
+- Clean imports prevent hidden dependencies and make the codebase easier to hand off to another developer.
+
+### Script-to-Module Shift
+
+The project is designed so each Python file can be imported safely without triggering training automatically.
+
+- `main.py` contains the entry point guarded by `if __name__ == "__main__":`.
+- `train.py` defines training behavior but does not execute it on import.
+- `predict.py` only loads artifacts and predicts.
+- `evaluate.py` only computes metrics.
+- `feature_engineering.py` only transforms features.
+
+### Configuration Plan
+
+Shared values are centralized in `src/config.py` so paths, seeds, and hyperparameters are not duplicated.
+
+- File paths stay in one place.
+- Random state stays in one place.
+- Column names stay in one place.
+- Model hyperparameters stay in one place.
+
+### Training and Prediction Boundary
+
+Training and prediction are separated on purpose.
+
+- Training uses `fit()` or `fit_transform()` on the training set only.
+- Prediction uses `transform()` with already-fitted preprocessing artifacts.
+- `predict.py` never retrains the model.
+- Saved artifacts in `models/` make inference reproducible.
+
+### Testing and Maintainability Plan
+
+- Each function should return data instead of printing it.
+- Each function should have a docstring and type hints.
+- Each module should have one responsibility.
+- Each reusable step should be isolated enough to unit test later.
+
+### Recommended Development Flow
+
+1. Load raw data in `data_preprocessing.py`.
+2. Clean and validate data in the same module.
+3. Build features in `feature_engineering.py`.
+4. Train a model in `train.py`.
+5. Evaluate the fitted model in `evaluate.py`.
+6. Save and load artifacts in `persistence.py`.
+7. Generate predictions in `predict.py`.
+8. Orchestrate the full flow from `main.py`.
+
 ## How To Use
 
 1. Install dependencies with `pip install -r requirements.txt`.
