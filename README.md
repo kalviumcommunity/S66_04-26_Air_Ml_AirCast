@@ -36,6 +36,29 @@ project_root/
 - `src/predict.py` loads artifacts and generates predictions on new data.
 - `main.py` orchestrates the full workflow.
 
+## Module Structure Plan
+
+The project follows a clean `Data -> Preprocessing -> Features -> Model -> Evaluation -> Prediction` flow so each stage stays isolated and reusable.
+
+- `main.py` is the entry point. It imports the functions it needs and runs them in sequence.
+- `src/config.py` holds shared constants such as file paths, random seeds, and hyperparameters.
+- `src/data_preprocessing.py` defines reusable functions for loading, cleaning, and splitting data.
+- `src/feature_engineering.py` defines reusable feature transformations and the preprocessing pipeline.
+- `src/train.py` trains the model only. It should not evaluate, print, or predict.
+- `src/evaluate.py` computes metrics on a fitted model and returns them as structured data.
+- `src/predict.py` loads saved artifacts and generates predictions on new data.
+- `src/persistence.py` saves and loads artifacts so prediction does not depend on retraining.
+
+Import rules for the project:
+
+- Use absolute imports from `src`, such as `from src.train import train_model`.
+- Keep imports explicit and avoid wildcard imports.
+- Do not let `predict.py` import training logic.
+- Store shared values in `config.py` instead of duplicating them across files.
+- Keep preprocessing logic in one place so training and prediction use the same transformations.
+
+This structure makes the repository easier to test, easier to review, and safer to extend when the model or dataset changes.
+
 ## How To Use
 
 1. Install dependencies with `pip install -r requirements.txt`.
