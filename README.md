@@ -120,10 +120,19 @@ Training and prediction are separated on purpose.
 
 ## How To Use
 
-1. Install dependencies with `pip install -r requirements.txt`.
-2. Put your CSV file in `data/raw/` and update `src/config.py` with the correct file path and column names.
-3. Define the categorical and numerical columns in `Config`.
-4. Run `python main.py` to train the model, evaluate it, and save artifacts.
+1. Create a virtual environment with `python -m venv venv`.
+2. Activate it with `venv\\Scripts\\activate` on Windows or `source venv/bin/activate` on macOS/Linux.
+3. Install dependencies with `pip install -r requirements.txt`.
+4. Put your CSV file in `data/raw/` and update `src/config.py` with the correct file path and column names.
+5. Define the categorical and numerical columns in `Config`.
+6. Run `python main.py` to train the model, evaluate it, and save artifacts.
+7. When the environment is ready, freeze exact versions with `pip freeze > requirements.txt`.
+
+## Environment Notes
+
+- Keep `venv/` out of version control.
+- Avoid mixing global Python packages with project-specific packages.
+- Recreate the same environment later with `pip install -r requirements.txt`.
 
 ## Notes
 
