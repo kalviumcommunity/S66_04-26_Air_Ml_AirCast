@@ -649,6 +649,381 @@ For your README, document clearly:
 
 If you cannot answer all of these clearly, stop and clarify before proceeding.
 
+## Inspecting Feature Distributions Before Modeling
+
+Before you train any machine learning model, you must understand what your data actually looks like — column by column. This is not optional. This is foundational risk management.
+
+Models learn patterns from data. If your features contain extreme skew, heavy outliers, inconsistent categories, or data quality issues, the model will learn those patterns too. You cannot fix what you do not inspect.
+
+### Why Feature Distribution Inspection Matters
+
+Different ML algorithms make different assumptions about data:
+
+- **Linear models** assume approximate linearity and are sensitive to outliers
+- **Distance-based models** (KNN, SVM) are sensitive to feature scale
+- **Tree-based models** are more robust to skew but can still be influenced by extreme values
+- **Neural networks** benefit from normalized inputs
+
+If you inspect distributions, you can make informed preprocessing decisions. If you skip inspection, you risk:
+
+- Feeding highly skewed variables into models that assume linearity
+- Allowing outliers to dominate training
+- Treating ordinal categories as nominal (or vice versa)
+- Ignoring rare classes that distort evaluation
+- Missing data quality issues entirely
+
+**Inspection reduces uncertainty. It allows decisions to be evidence-based rather than reactive.**
+
+### Inspecting Numerical Features
+
+For numerical features in your air pollution dataset (temperature, humidity, pollution levels), examine:
+
+**Summary statistics:**
+```python
+df.describe()
+# Shows: count, mean, std, min, max, and quartiles
+```
+
+This gives quick insight into central tendency and range, but is insufficient alone. Two features can have identical statistics but completely different distributions.
+
+**Histograms reveal distribution shape:**
+```python
+import matplotlib.pyplot as plt
+
+df['temperature'].hist(bins=30)
+plt.title("Temperature Distribution")
+plt.xlabel("Temperature (°C)")
+plt.ylabel("Frequency")
+plt.show()
+```
+
+Look for:
+- Symmetry vs skewness
+- Long tails (indicating outliers)
+- Multiple peaks (indicating subgroups, e.g., seasonal patterns)
+- Unexpected gaps
+
+**Boxplots highlight outliers:**
+```python
+df.boxplot(column='AQI')
+plt.show()
+```
+
+Boxplots show:
+- Median (center line)
+- Interquartile range (IQR)
+- Outliers beyond 1.5 × IQR (shown as individual points)
+
+For air pollution data, extreme AQI values above 1.5 × IQR might represent actual pollution events (not errors) or measurement anomalies. Inspection helps you decide whether to:
+- Keep them (they represent real events)
+- Cap them (treat as outliers)
+- Transform them (log scaling)
+- Remove them (with justification)
+
+**Skewness indicates asymmetry:**
+```python
+df['TotalCharges'].skew()
+# Near 0: symmetric
+# Positive: right-skewed (long tail to right)
+# Negative: left-skewed (long tail to left)
+```
+
+Highly skewed numerical features may cause linear models to overweight large values. Transformations may help:
+```python
+import numpy as np
+
+# Log transformation (useful for right-skewed data)
+df['feature_log'] = np.log1p(df['feature'])  # log1p handles zeros
+
+# Square root transformation
+df['feature_sqrt'] = np.sqrt(df['feature'])
+
+# Box-Cox transformation (optimal, but requires positive values)
+from scipy.stats import boxcox
+df['feature_transformed'], lambda_param = boxcox(df['feature'])
+```
+
+**Always re-plot after transformation to verify improvement.**
+
+### Inspecting Categorical Features
+
+For categorical features in your air pollution dataset (location_id, season, day_of_week, is_weekend), examine:
+
+**Category frequencies:**
+```python
+df['season'].value_counts()
+# Shows count for each category
+
+df['season'].value_counts(normalize=True)
+# Shows proportion
+```
+
+Look for:
+- Severe class imbalance
+- Rare categories with very few samples
+- Unexpected values or typos
+- Inconsistent labeling ("Winter", "winter", "WINTER")
+
+**Example output:**
+```
+Winter    120
+Spring    115
+Summer    130
+Fall      135
+Name: season, dtype: int64
+```
+
+Balanced categories are good. If one category dominates (e.g., 90% of observations), it may weaken the model's ability to predict other categories.
+
+Rare categories may:
+- Cause unstable model behavior
+- Lead to overfitting
+- Inflate dimensionality after encoding
+
+**Possible solutions:**
+```python
+# Group rare categories into 'Other'
+df['season_grouped'] = df['season'].where(
+    df['season'].isin(['Winter', 'Spring']),  # Keep frequent ones
+    'Other'  # Consolidate rare ones
+)
+
+# Or drop extremely sparse categories
+season_counts = df['season'].value_counts()
+keep_categories = season_counts[season_counts > 10].index
+df['season_filtered'] = df['season'].where(
+    df['season'].isin(keep_categories),
+    np.nan  # Mark for imputation or removal
+)
+```
+
+### Detecting Hidden Data Quality Issues
+
+Distribution inspection often reveals deeper problems:
+
+**Impossible values:**
+```python
+# Age = -5 (negative age)
+# Temperature = 500°C (unrealistic)
+# Humidity = 150% (exceeds maximum)
+```
+
+These indicate data corruption. Decide whether to:
+- Remove the row
+- Fix the value if the error is obvious
+- Mark as missing and impute
+
+**Excessive zeros:**
+```python
+df['pollution_pm25'].value_counts()
+
+# If 95% of values are 0:
+# This may be measurement error, not zero pollution
+# Treat as missing data or investigate cause
+```
+
+**Multi-modal distributions:**
+Multiple peaks may indicate:
+```python
+# Visualize to see multiple peaks
+df['AQI'].hist(bins=50)
+plt.show()
+
+# Possible causes:
+# - Different seasons with different baseline pollution
+# - Different locations with different levels
+# - Data from different measurement methods
+```
+
+Recognizing this early influences feature engineering (e.g., creating separate models per season or location).
+
+### Comparing Distributions Across Target Classes
+
+Feature inspection becomes more powerful when you compare distributions by target variable.
+
+**For classification (risk category):**
+```python
+# Compare pollution levels by risk category
+df.groupby('risk_category')['AQI'].describe()
+
+# Visualize
+import seaborn as sns
+sns.boxplot(x='risk_category', y='AQI', data=df)
+plt.title("AQI Distribution by Risk Category")
+plt.show()
+```
+
+Ask:
+- Do high-risk days have higher AQI values? (Expected: yes)
+- Is there overlap in distributions? (Heavy overlap = weak signal)
+- Are there unusual patterns?
+
+**For regression (predicting AQI value):**
+```python
+# Scatter plot of features vs target
+df.plot(x='temperature', y='AQI', kind='scatter')
+plt.title("Temperature vs AQI")
+plt.show()
+```
+
+Look for:
+- Linear relationships (simple)
+- Non-linear relationships (may need transformation)
+- Clusters or subgroups
+- Outliers
+
+**Features with meaningful differences across target classes are likely predictive.**
+
+### Feature Scaling Considerations
+
+Inspection also informs scaling decisions.
+
+Check ranges:
+```python
+df[['temperature', 'humidity', 'pollution_pm25']].agg(['min', 'max'])
+
+# Output:
+#             temperature  humidity  pollution_pm25
+# min              -10.0       20.0             0.0
+# max               45.0      100.0          500.0
+```
+
+If features have vastly different scales (0-1 vs 0-500,000), **distance-based models will prioritize the larger-scale feature**.
+
+**Scale when using:**
+- KNN (distance metric dominates)
+- SVM (distance metric dominates)
+- Neural networks (gradient descent converges better)
+- Regularized linear models (L1/L2 penalties scale with magnitude)
+
+**Don't necessarily scale when using:**
+- Decision trees (invariant to scale)
+- Random forests (invariant to scale)
+- Gradient boosting (invariant to scale)
+
+But inspection helps detect anomalies regardless.
+
+### Systematic Inspection Workflow
+
+Before modeling, follow this structured approach:
+
+```
+1. Load dataset
+2. Print shape and data types: df.info()
+3. Separate numerical and categorical columns
+4. Generate summary statistics: df.describe()
+5. Plot histograms for all numerical features
+6. Plot boxplots for all numerical features
+7. Print value_counts() for all categorical features
+8. Compare distributions across target classes
+9. Identify skewness: df.skew()
+10. Document observations and required transformations
+```
+
+This systematic process prevents oversights.
+
+### Documenting Distribution Observations
+
+Professional ML projects require documentation of insights.
+
+**Example for air pollution project:**
+
+```
+## Feature Distribution Analysis
+
+### Numerical Features
+
+- **temperature** (~Normal distribution)
+  - Range: -10°C to 45°C
+  - Mean: 18°C, Median: 18°C
+  - Symmetric, no transformation needed
+  
+- **AQI** (Highly right-skewed, skewness=2.1)
+  - Range: 10 to 500
+  - Mean: 120, Median: 95
+  - Heavy outliers above 350
+  - **Action**: Log transformation recommended
+  
+- **pollution_pm25** (Right-skewed, 40% zeros)
+  - Contains many "clean air" days with PM2.5 ≈ 0
+  - Peaks around 50-150 µg/m³
+  - **Action**: Consider separate treatment for zero vs non-zero
+
+### Categorical Features
+
+- **season** (Balanced)
+  - Winter: 25%, Spring: 25%, Summer: 25%, Fall: 25%
+  - No imbalance, no transformation needed
+  
+- **location_id** (Imbalanced)
+  - DL_1: 40% (major city)
+  - DL_2-5: ~12% each (smaller cities)
+  - MH_1-3: ~8% each (regions)
+  - **Action**: Consider separate models per location or feature encoding
+
+### Target Distribution
+
+- **risk_category** (Imbalanced)
+  - Good: 45%
+  - Moderate: 30%
+  - Unhealthy: 20%
+  - Hazardous: 5%
+  - **Challenge**: Minority class (Hazardous) underrepresented
+  - **Action**: Use stratified sampling, consider class weighting
+
+### Cross-Target Feature Comparison
+
+- **AQI by risk_category**: Clear separation, strong signal
+- **temperature by risk_category**: Some overlap, moderate signal
+- **pollution_pm25 by risk_category**: Moderate separation
+
+### Data Quality Issues
+
+- No impossible values detected
+- No inconsistent labeling
+- No unexpected missing patterns
+```
+
+This level of documentation ensures decisions are traceable.
+
+### Common Mistakes to Avoid
+
+**Mistake 1: Skipping visualization**
+- Relying only on summary statistics hides skewness and anomalies
+- Always plot histograms and boxplots
+
+**Mistake 2: Ignoring outliers**
+- Outliers can dominate loss functions during training
+- Inspect and decide deliberately
+
+**Mistake 3: Transforming without justification**
+- Don't apply log transforms automatically
+- Check skewness first; transform only if needed
+
+**Mistake 4: Ignoring categorical imbalance**
+- Severe imbalance requires special handling
+- May need stratified splitting or class weighting
+
+**Mistake 5: Using test set in inspection**
+- Inspect BEFORE train/test split (or use training set statistics only)
+- Avoid data leakage
+
+### Before Training Your Model
+
+Before writing any model code in this sprint:
+
+1. ✓ Load your air pollution dataset
+2. ✓ Inspect every numerical feature visually (histogram + boxplot)
+3. ✓ Check skewness values
+4. ✓ Identify outliers and understand them
+5. ✓ Inspect categorical frequencies
+6. ✓ Compare distributions across your target variable
+7. ✓ Document all observations and decisions
+8. ✓ Decide on transformations (log, scale, etc.)
+9. ✓ Only then proceed to preprocessing
+
+This ensures your model training is grounded in real understanding, not blind execution.
+
 The project follows a clean `Data -> Preprocessing -> Features -> Model -> Evaluation -> Prediction` flow so each stage stays isolated and reusable.
 
 - `main.py` is the entry point. It imports the functions it needs and runs them in sequence.
