@@ -26,6 +26,8 @@ ml-project/
 │
 ├── models/                  # Trained model artifacts and pipelines
 │
+├── documentation/           # Implementation notes and lesson docs
+
 ├── reports/                 # Evaluation reports and visualizations
 │
 ├── logs/                    # Experiment logs and tracking
@@ -58,6 +60,11 @@ ml-project/
 - Trained model artifacts (`.pkl`, `.joblib`).
 - Saved preprocessing pipelines.
 - Versioned artifacts for reproducibility.
+
+### `documentation/`
+- Implementation notes for notebooks, lessons, and design decisions.
+- Keeps documentation separate from runnable source code.
+- Useful for project handoff and reproducibility.
 
 ### `reports/`
 - Evaluation reports and visualizations.
