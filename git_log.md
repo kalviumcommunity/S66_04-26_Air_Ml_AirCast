@@ -23,3 +23,15 @@
   - Implemented precision and recall based evaluation strategy for AirCast classification
   - Documented false-positive and false-negative trade-off handling
   - Added product-risk aligned metric selection guidance
+
+### Learning Unit: Evaluating Classification Models Using F1-Score (LU 5.28)
+
+- Branch Name: f1-score-eval
+
+- Commits:
+  - docs(eval): add lu5.28 f1 score evaluation plan
+
+- Merge Description:
+  - Added F1-based classifier evaluation strategy for imbalanced classes
+  - Documented macro/weighted F1 usage for fair comparison
+  - Strengthened model selection workflow with balanced metric criteria
