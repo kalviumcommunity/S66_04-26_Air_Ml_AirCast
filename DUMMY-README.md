@@ -132,3 +132,22 @@ How Decision Trees split data recursively and how to constrain complexity for ro
 
 ### Output/result
 AirCast includes a constrained Decision Tree benchmark for transparent and reliable predictions.
+
+## Learning Unit 5.33: Interpreting Feature Importance from Tree-Based Models
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### What it covers
+How to extract and compare feature importance from tree-based models using both impurity and permutation methods.
+
+### Features implemented
+- Feature importance extraction workflow.
+- Cross-method comparison guidance.
+- Interpretation guardrails for trustworthy insights.
+
+### Key learnings
+- Importance scores are method-dependent and require context.
+- Permutation importance helps validate true predictive contribution.
+
+### Output/result
+AirCast reporting now highlights reliable feature drivers for explainable model behavior.

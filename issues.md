@@ -111,3 +111,19 @@ Recursive splitting continued until noise was memorized.
 
 ### Solution
 Introduced depth and leaf-size constraints and validated generalization with held-out data.
+
+## Learning Unit 5.33: Interpreting Feature Importance from Tree-Based Models
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Issue description
+Feature rankings differed between model-internal importance and actual predictive influence.
+
+### When it occurred
+During interpretation of trained tree-based model outputs.
+
+### Root cause
+Impurity-based importance can be biased by feature properties.
+
+### Solution
+Paired impurity-based scores with permutation importance and documented interpretation constraints.
