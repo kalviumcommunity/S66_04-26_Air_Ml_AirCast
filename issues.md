@@ -63,3 +63,19 @@ Lack of explicit TP/FP/FN/TN breakdown masked critical error categories.
 
 ### Solution
 Added confusion matrix analysis as a mandatory evaluation artifact in model reports.
+
+## Learning Unit 5.30: Training a K-Nearest Neighbours (KNN) Model
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Issue description
+KNN produced unstable results across runs with different feature scales.
+
+### When it occurred
+During first KNN benchmark experiments in the model training phase.
+
+### Root cause
+Distance-based learning is sensitive to feature magnitude differences.
+
+### Solution
+Introduced mandatory scaling and documented metric-aware K selection strategy.
