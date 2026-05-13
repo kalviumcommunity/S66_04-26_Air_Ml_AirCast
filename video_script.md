@@ -223,3 +223,31 @@ This unit adds explainability for AirCast by identifying which input features mo
 
 ### Final outcome
 AirCast now includes explainable feature-impact reporting to support model transparency and better decisions.
+
+## Learning Unit 5.34: Improving Model Performance with Hyperparameter Tuning using GridSearchCV
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Introduction
+This unit adds systematic tuning to the AirCast pipeline so model choices are selected by cross-validated evidence, not manual guesswork.
+
+### What was built
+- Added `GridSearchCV` based tuning utility for reusable model optimization.
+- Added KNN and Decision Tree training helpers for structured experimentation.
+- Added evaluation upgrades with balanced accuracy and confusion-matrix details.
+
+### Step-by-step explanation
+1. Wrap estimators in reproducible training utilities.
+2. Define parameter grids based on model behavior.
+3. Run `GridSearchCV` with a selected metric and cross-validation.
+4. Compare candidate configurations using validation scores.
+5. Promote the best model and log reasoning.
+
+### Challenges faced
+- Manual tuning caused inconsistent and non-reproducible model selection.
+
+### Solutions applied
+- Centralized tuning logic and added reusable metrics for robust comparison.
+
+### Final outcome
+AirCast now has a production-aligned model selection stage with repeatable hyperparameter tuning and stronger evaluation controls.

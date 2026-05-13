@@ -95,3 +95,15 @@
   - Added feature importance interpretation workflow for tree-based models
   - Documented impurity vs permutation comparison strategy
   - Improved explainability reporting for model decision analysis
+
+### Learning Unit: Improving Model Performance with Hyperparameter Tuning using GridSearchCV (LU 5.34)
+
+- Branch Name: gridsearchcv-tuning
+
+- Commits:
+  - feat(tuning): add lu5.34 gridsearchcv workflow
+
+- Merge Description:
+  - Added reusable model tuning utilities with GridSearchCV and cross-validation
+  - Implemented KNN and Decision Tree training helpers for structured experiments
+  - Extended evaluation metrics with balanced accuracy and confusion matrix breakdown

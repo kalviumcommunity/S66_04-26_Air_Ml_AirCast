@@ -151,3 +151,22 @@ How to extract and compare feature importance from tree-based models using both 
 
 ### Output/result
 AirCast reporting now highlights reliable feature drivers for explainable model behavior.
+
+## Learning Unit 5.34: Improving Model Performance with Hyperparameter Tuning using GridSearchCV
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### What it covers
+How to tune model hyperparameters using `GridSearchCV`, cross-validation, and metric-guided model selection.
+
+### Features implemented
+- Reusable GridSearchCV tuning helper in `src/model_selection.py`.
+- KNN and Decision Tree training helpers for consistent experimentation.
+- Extended evaluation with balanced accuracy and confusion details.
+
+### Key learnings
+- Cross-validated tuning improves reliability over manual guessing.
+- Unified utilities reduce leakage and inconsistency in experiments.
+
+### Output/result
+AirCast now supports repeatable, evidence-based model optimization and selection.
