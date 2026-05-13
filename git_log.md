@@ -83,3 +83,15 @@
   - Added Decision Tree training workflow for interpretable modeling
   - Introduced depth and leaf constraints to control overfitting
   - Documented evaluation strategy for constrained tree selection
+
+### Learning Unit: Interpreting Feature Importance from Tree-Based Models (LU 5.33)
+
+- Branch Name: feature-importance-tree
+
+- Commits:
+  - docs(model): add lu5.33 feature importance plan
+
+- Merge Description:
+  - Added feature importance interpretation workflow for tree-based models
+  - Documented impurity vs permutation comparison strategy
+  - Improved explainability reporting for model decision analysis

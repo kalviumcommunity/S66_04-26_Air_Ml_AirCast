@@ -195,3 +195,31 @@ This unit adds interpretable tree-based modeling so AirCast predictions can be e
 
 ### Final outcome
 AirCast now has an interpretable Decision Tree stage with overfitting control built into the training workflow.
+
+## Learning Unit 5.33: Interpreting Feature Importance from Tree-Based Models
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Introduction
+This unit adds explainability for AirCast by identifying which input features most influence tree-based model predictions.
+
+### What was built
+- Added feature importance extraction for Decision Tree, Random Forest, and Gradient Boosting models.
+- Added impurity-based vs permutation importance comparison guidance.
+- Added interpretation rules to avoid misleading conclusions.
+
+### Step-by-step explanation
+1. Train tree-based models with stable validation setup.
+2. Extract built-in feature importance values.
+3. Compute permutation importance on held-out data.
+4. Compare rankings across both methods.
+5. Document robust feature drivers and caution notes.
+
+### Challenges faced
+- Impurity-based importance overvalued high-cardinality features.
+
+### Solutions applied
+- Added permutation importance checks and cross-model consistency review.
+
+### Final outcome
+AirCast now includes explainable feature-impact reporting to support model transparency and better decisions.
