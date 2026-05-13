@@ -71,3 +71,15 @@
   - Added bias-variance diagnostic process for model behavior analysis
   - Documented learning-curve interpretation for underfit/overfit detection
   - Introduced generalization-focused model improvement guidance
+
+### Learning Unit: Training a Decision Tree Model (LU 5.32)
+
+- Branch Name: train-decision-tree
+
+- Commits:
+  - feat(tree): add lu5.32 decision tree training plan
+
+- Merge Description:
+  - Added Decision Tree training workflow for interpretable modeling
+  - Introduced depth and leaf constraints to control overfitting
+  - Documented evaluation strategy for constrained tree selection

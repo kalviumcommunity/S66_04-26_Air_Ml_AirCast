@@ -113,3 +113,22 @@ How to identify underfitting and overfitting using train/test behavior and learn
 
 ### Output/result
 AirCast model review now includes systematic generalization diagnostics before promotion.
+
+## Learning Unit 5.32: Training a Decision Tree Model
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### What it covers
+How Decision Trees split data recursively and how to constrain complexity for robust performance.
+
+### Features implemented
+- Decision Tree training workflow.
+- Overfitting controls via depth and leaf parameters.
+- Interpretable rule-review process.
+
+### Key learnings
+- Decision Trees are highly interpretable but can overfit if unconstrained.
+- Controlled depth improves test performance stability.
+
+### Output/result
+AirCast includes a constrained Decision Tree benchmark for transparent and reliable predictions.

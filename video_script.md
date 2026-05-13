@@ -167,3 +167,31 @@ This unit strengthens model diagnostics by identifying underfitting and overfitt
 
 ### Final outcome
 AirCast now has a structured approach to controlling overfitting and improving model generalization.
+
+## Learning Unit 5.32: Training a Decision Tree Model
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Introduction
+This unit adds interpretable tree-based modeling so AirCast predictions can be explained through explicit split rules.
+
+### What was built
+- Added Decision Tree training plan for classification/regression use.
+- Added depth and leaf constraints to reduce overfitting.
+- Added evaluation and interpretability review steps.
+
+### Step-by-step explanation
+1. Prepare features and labels from processed data.
+2. Train a baseline Decision Tree.
+3. Apply constraints (`max_depth`, `min_samples_leaf`, `min_samples_split`).
+4. Evaluate train/test metrics for generalization.
+5. Inspect tree behavior and finalize a constrained model.
+
+### Challenges faced
+- Unconstrained trees overfit quickly on training data.
+
+### Solutions applied
+- Added regularized tree settings and comparison against baseline complexity.
+
+### Final outcome
+AirCast now has an interpretable Decision Tree stage with overfitting control built into the training workflow.
