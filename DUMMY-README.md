@@ -56,3 +56,22 @@ How F1-score combines precision and recall into a balanced performance metric fo
 
 ### Output/result
 AirCast model reports now include F1-driven ranking for robust classifier selection.
+
+## Learning Unit 5.29: Creating and Interpreting a Confusion Matrix
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### What it covers
+How to construct confusion matrices and interpret TP, FP, FN, and TN to diagnose model behavior.
+
+### Features implemented
+- Confusion matrix generation for classification outputs.
+- Matrix interpretation template for error analysis.
+- Error-type driven improvement notes for next iterations.
+
+### Key learnings
+- Matrix analysis reveals what aggregate metrics hide.
+- Error categories guide targeted model corrections.
+
+### Output/result
+AirCast evaluation now includes transparent error diagnostics for each classifier run.
