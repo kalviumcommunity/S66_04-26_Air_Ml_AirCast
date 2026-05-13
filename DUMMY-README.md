@@ -94,3 +94,22 @@ How KNN predicts using nearest data points and why scaling and distance metrics 
 
 ### Output/result
 Added a tuned KNN modeling stage to strengthen AirCast baseline model comparisons.
+
+## Learning Unit 5.31: Understanding Bias and Variance Through Model Behavior
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### What it covers
+How to identify underfitting and overfitting using train/test behavior and learning curves.
+
+### Features implemented
+- Bias-variance diagnosis framework.
+- Learning-curve based model behavior checks.
+- Generalization-focused correction strategy notes.
+
+### Key learnings
+- Strong training scores do not guarantee real-world performance.
+- Controlled complexity improves stability across unseen data.
+
+### Output/result
+AirCast model review now includes systematic generalization diagnostics before promotion.

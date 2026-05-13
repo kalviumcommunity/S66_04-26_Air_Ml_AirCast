@@ -79,3 +79,19 @@ Distance-based learning is sensitive to feature magnitude differences.
 
 ### Solution
 Introduced mandatory scaling and documented metric-aware K selection strategy.
+
+## Learning Unit 5.31: Understanding Bias and Variance Through Model Behavior
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Issue description
+Model performance dropped sharply from training to test datasets.
+
+### When it occurred
+During candidate model comparison after adding more complex learners.
+
+### Root cause
+High variance due to model complexity relative to available training signal.
+
+### Solution
+Introduced learning-curve diagnostics and regularization/depth constraints in model selection logic.
