@@ -95,3 +95,19 @@ High variance due to model complexity relative to available training signal.
 
 ### Solution
 Introduced learning-curve diagnostics and regularization/depth constraints in model selection logic.
+
+## Learning Unit 5.32: Training a Decision Tree Model
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Issue description
+Tree model achieved near-perfect training accuracy but weak test performance.
+
+### When it occurred
+During first Decision Tree fitting pass without constraints.
+
+### Root cause
+Recursive splitting continued until noise was memorized.
+
+### Solution
+Introduced depth and leaf-size constraints and validated generalization with held-out data.
