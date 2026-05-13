@@ -15,3 +15,19 @@ Class imbalance allowed majority-class correctness to dominate the overall score
 
 ### Solution
 Added balanced accuracy and confusion matrix inspection to the required evaluation checklist.
+
+## Learning Unit 5.27: Evaluating Classification Models Using Precision and Recall
+- Date: 2026-05-13
+- Timestamp: Follow-up draft
+
+### Issue description
+Model ranking changed when precision and recall were introduced.
+
+### When it occurred
+During model comparison on imbalanced classification labels.
+
+### Root cause
+Accuracy masked false-negative and false-positive behavior.
+
+### Solution
+Added precision/recall reporting and business-context threshold tuning notes.
