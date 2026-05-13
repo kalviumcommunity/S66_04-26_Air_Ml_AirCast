@@ -31,3 +31,19 @@ Accuracy masked false-negative and false-positive behavior.
 
 ### Solution
 Added precision/recall reporting and business-context threshold tuning notes.
+
+## Learning Unit 5.28: Evaluating Classification Models Using F1-Score
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Issue description
+Precision improved in one model while recall dropped sharply.
+
+### When it occurred
+During metric comparison between baseline and tuned classifiers.
+
+### Root cause
+Single-metric optimization biased one side of the precision-recall trade-off.
+
+### Solution
+Adopted F1-score as the primary comparison metric for balanced classification behavior.

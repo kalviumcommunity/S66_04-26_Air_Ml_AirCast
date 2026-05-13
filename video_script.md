@@ -55,3 +55,31 @@ This unit extends AirCast evaluation to prioritize error types, especially when 
 
 ### Final outcome
 AirCast can now evaluate classification quality using error-aware metrics rather than relying on accuracy alone.
+
+## Learning Unit 5.28: Evaluating Classification Models Using F1-Score
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Introduction
+This unit adds F1-score to balance precision and recall when AirCast decisions must avoid both missed events and noisy alerts.
+
+### What was built
+- Added F1-score to the evaluation dashboard.
+- Added macro and weighted F1 interpretation for imbalance.
+- Added metric selection guidance for threshold tuning.
+
+### Step-by-step explanation
+1. Compute precision and recall for the target class.
+2. Calculate F1 as the harmonic mean of precision and recall.
+3. Compare F1 with accuracy and balanced accuracy.
+4. Use macro F1 for class-balanced comparison.
+5. Record model ranking based on chosen F1 objective.
+
+### Challenges faced
+- Models with strong accuracy did not always retain strong F1.
+
+### Solutions applied
+- Prioritized F1 when minority class detection quality matters more than majority accuracy.
+
+### Final outcome
+The evaluation process now includes a robust single-score metric for imbalanced classification performance.
