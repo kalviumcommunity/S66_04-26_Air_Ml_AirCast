@@ -35,3 +35,15 @@
   - Added F1-based classifier evaluation strategy for imbalanced classes
   - Documented macro/weighted F1 usage for fair comparison
   - Strengthened model selection workflow with balanced metric criteria
+
+### Learning Unit: Creating and Interpreting a Confusion Matrix (LU 5.29)
+
+- Branch Name: confusion-matrix
+
+- Commits:
+  - docs(eval): add lu5.29 confusion matrix plan
+
+- Merge Description:
+  - Added confusion matrix creation and interpretation workflow
+  - Standardized TP/FP/FN/TN analysis in evaluation reporting
+  - Improved classification debugging with error-type visibility

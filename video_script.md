@@ -83,3 +83,31 @@ This unit adds F1-score to balance precision and recall when AirCast decisions m
 
 ### Final outcome
 The evaluation process now includes a robust single-score metric for imbalanced classification performance.
+
+## Learning Unit 5.29: Creating and Interpreting a Confusion Matrix
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Introduction
+This unit adds error-visibility tooling so AirCast teams can inspect exactly where the classifier succeeds and fails.
+
+### What was built
+- Added confusion matrix construction for classification outputs.
+- Added TN/FP/FN/TP interpretation notes.
+- Added class-level error diagnosis workflow.
+
+### Step-by-step explanation
+1. Generate predicted labels for the test split.
+2. Build the confusion matrix from true and predicted labels.
+3. Map each cell to TN, FP, FN, and TP.
+4. Calculate class-specific error indicators from matrix values.
+5. Document targeted improvements based on dominant error type.
+
+### Challenges faced
+- Team initially interpreted row/column axes inconsistently.
+
+### Solutions applied
+- Standardized label ordering and added explicit matrix interpretation guidelines.
+
+### Final outcome
+The project now has a clear diagnostic layer for classification mistakes, enabling focused model improvements.

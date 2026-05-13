@@ -47,3 +47,19 @@ Single-metric optimization biased one side of the precision-recall trade-off.
 
 ### Solution
 Adopted F1-score as the primary comparison metric for balanced classification behavior.
+
+## Learning Unit 5.29: Creating and Interpreting a Confusion Matrix
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Issue description
+False negatives were overlooked during early model review.
+
+### When it occurred
+While validating classifier performance from top-level metrics only.
+
+### Root cause
+Lack of explicit TP/FP/FN/TN breakdown masked critical error categories.
+
+### Solution
+Added confusion matrix analysis as a mandatory evaluation artifact in model reports.
