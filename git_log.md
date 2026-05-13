@@ -47,3 +47,15 @@
   - Added confusion matrix creation and interpretation workflow
   - Standardized TP/FP/FN/TN analysis in evaluation reporting
   - Improved classification debugging with error-type visibility
+
+### Learning Unit: Training a K-Nearest Neighbours (KNN) Model (LU 5.30)
+
+- Branch Name: train-knn
+
+- Commits:
+  - feat(model): add lu5.30 knn training plan
+
+- Merge Description:
+  - Added KNN model training strategy with scaling-first workflow
+  - Documented distance metric sensitivity and K selection approach
+  - Extended AirCast model benchmarking with neighborhood-based learning

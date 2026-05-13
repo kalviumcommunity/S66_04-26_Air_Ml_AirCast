@@ -111,3 +111,31 @@ This unit adds error-visibility tooling so AirCast teams can inspect exactly whe
 
 ### Final outcome
 The project now has a clear diagnostic layer for classification mistakes, enabling focused model improvements.
+
+## Learning Unit 5.30: Training a K-Nearest Neighbours (KNN) Model
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Introduction
+This unit introduces a distance-based model in AirCast to benchmark non-linear neighborhood behavior for both classification and regression tracks.
+
+### What was built
+- Added KNN training workflow with configurable `k` and distance metric.
+- Added feature scaling requirement before KNN fitting.
+- Added validation routine for selecting best neighbor count.
+
+### Step-by-step explanation
+1. Prepare train/test data and scale numeric features.
+2. Initialize KNN model with candidate hyperparameters.
+3. Train KNN on scaled training data.
+4. Evaluate performance on validation/test split.
+5. Compare KNN against previous baseline models.
+
+### Challenges faced
+- Unscaled features biased distance calculations.
+
+### Solutions applied
+- Enforced standardization before KNN and documented this as non-optional.
+
+### Final outcome
+AirCast now includes a properly trained KNN baseline with reliable evaluation and tuning structure.

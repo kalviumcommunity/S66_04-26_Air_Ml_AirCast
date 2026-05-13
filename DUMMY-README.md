@@ -75,3 +75,22 @@ How to construct confusion matrices and interpret TP, FP, FN, and TN to diagnose
 
 ### Output/result
 AirCast evaluation now includes transparent error diagnostics for each classifier run.
+
+## Learning Unit 5.30: Training a K-Nearest Neighbours (KNN) Model
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### What it covers
+How KNN predicts using nearest data points and why scaling and distance metrics are critical.
+
+### Features implemented
+- KNN training pipeline with configurable neighbors.
+- Feature scaling integration before KNN modeling.
+- Validation-based K selection notes.
+
+### Key learnings
+- KNN quality depends heavily on feature scaling.
+- Hyperparameter `k` controls bias-variance behavior in local predictions.
+
+### Output/result
+Added a tuned KNN modeling stage to strengthen AirCast baseline model comparisons.
