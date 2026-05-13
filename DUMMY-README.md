@@ -18,3 +18,22 @@ How to evaluate classification predictions using accuracy, confusion matrix cont
 
 ### Output/result
 Established an evaluation-first workflow that reduces metric misinterpretation in AirCast classification modules.
+
+## Learning Unit 5.27: Evaluating Classification Models Using Precision and Recall
+- Date: 2026-05-13
+- Timestamp: Follow-up draft
+
+### What it covers
+How to evaluate classification models with precision and recall and decide metric priority by product risk.
+
+### Features implemented
+- Precision metric reporting in evaluation summaries.
+- Recall metric reporting for positive-class detection quality.
+- Trade-off documentation for threshold and metric balancing.
+
+### Key learnings
+- Precision and recall are essential on imbalanced datasets.
+- Metric choice must align with false-positive vs false-negative cost.
+
+### Output/result
+Evaluation artifacts now include actionable precision-recall insights for model selection.
