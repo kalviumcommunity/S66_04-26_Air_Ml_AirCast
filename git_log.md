@@ -59,3 +59,15 @@
   - Added KNN model training strategy with scaling-first workflow
   - Documented distance metric sensitivity and K selection approach
   - Extended AirCast model benchmarking with neighborhood-based learning
+
+### Learning Unit: Understanding Bias and Variance Through Model Behavior (LU 5.31)
+
+- Branch Name: bias-variance-behavior
+
+- Commits:
+  - docs(model): add lu5.31 bias variance plan
+
+- Merge Description:
+  - Added bias-variance diagnostic process for model behavior analysis
+  - Documented learning-curve interpretation for underfit/overfit detection
+  - Introduced generalization-focused model improvement guidance

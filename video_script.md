@@ -139,3 +139,31 @@ This unit introduces a distance-based model in AirCast to benchmark non-linear n
 
 ### Final outcome
 AirCast now includes a properly trained KNN baseline with reliable evaluation and tuning structure.
+
+## Learning Unit 5.31: Understanding Bias and Variance Through Model Behavior
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Introduction
+This unit strengthens model diagnostics by identifying underfitting and overfitting patterns before deployment decisions.
+
+### What was built
+- Added bias-variance diagnosis checklist using train vs test metrics.
+- Added learning-curve interpretation notes.
+- Added practical mitigation strategy mapping.
+
+### Step-by-step explanation
+1. Compare training and test performance across candidate models.
+2. Detect high-bias patterns from uniformly low scores.
+3. Detect high-variance patterns from wide train-test gaps.
+4. Use learning curves to verify whether more data or regularization helps.
+5. Apply targeted interventions and re-evaluate.
+
+### Challenges faced
+- Some models looked strong on train data but failed to generalize.
+
+### Solutions applied
+- Added mandatory generalization checks and learning-curve evidence before model approval.
+
+### Final outcome
+AirCast now has a structured approach to controlling overfitting and improving model generalization.
