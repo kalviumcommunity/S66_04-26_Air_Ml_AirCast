@@ -127,3 +127,19 @@ Impurity-based importance can be biased by feature properties.
 
 ### Solution
 Paired impurity-based scores with permutation importance and documented interpretation constraints.
+
+## Learning Unit 5.34: Improving Model Performance with Hyperparameter Tuning using GridSearchCV
+- Date: 2026-05-13
+- Timestamp: Continuation draft
+
+### Issue description
+Hyperparameter choices were inconsistent and difficult to justify.
+
+### When it occurred
+During repeated model experiments across KNN and tree-based classifiers.
+
+### Root cause
+Manual trial-and-error lacked standardized validation criteria.
+
+### Solution
+Implemented reusable `GridSearchCV` tuning workflow with cross-validation and metric-driven selection.
