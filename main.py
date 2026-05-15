@@ -54,6 +54,7 @@ def run_workflow(config: Config | None = None) -> dict[str, float]:
         random_state=settings.random_state,
         n_estimators=settings.n_estimators,
         max_depth=settings.max_depth,
+        class_weight=settings.class_weight,
     )
 
     # Step 7: Build and fit FULL pipeline

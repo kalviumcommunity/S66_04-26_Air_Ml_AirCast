@@ -37,5 +37,6 @@ class Config:
     random_state: int = 42
     n_estimators: int = 200
     max_depth: int | None = None
+    class_weight: str | dict[str, float] | None = None
     categorical_columns: tuple[str, ...] = ()
     numerical_columns: tuple[str, ...] = ()
