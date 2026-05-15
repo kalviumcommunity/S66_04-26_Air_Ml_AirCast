@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Sequence, Mapping
 
 import pandas as pd
 from sklearn.base import clone
@@ -10,6 +10,54 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
+
+
+def compare_models(
+    models: Mapping[str, object],
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_test: pd.DataFrame,
+    y_test: pd.Series,
+) -> pd.DataFrame:
+    """Train and evaluate multiple models, returning a comparison table.
+    
+    Args:
+        models: Dictionary mapping model names to estimator objects.
+        X_train: Training features.
+        y_train: Training labels.
+        X_test: Testing features.
+        y_test: Testing labels.
+        
+    Returns:
+        A DataFrame containing evaluation metrics for each model.
+    """
+
+    results = []
+    
+    for name, model in models.items():
+        # Clone to avoid modifying original object
+        estimator = clone(model)
+        estimator.fit(X_train, y_train)
+        
+        y_pred = estimator.predict(X_test)
+        
+        # Try to get probabilities for ROC-AUC
+        if hasattr(estimator, "predict_proba"):
+            y_prob = estimator.predict_proba(X_test)[:, 1]
+            auc = roc_auc_score(y_test, y_prob)
+        else:
+            auc = None
+            
+        results.append({
+            "Model": name,
+            "F1": f1_score(y_test, y_pred, average="weighted"),
+            "Precision": precision_score(y_test, y_pred, average="weighted", zero_division=0),
+            "Recall": recall_score(y_test, y_pred, average="weighted"),
+            "ROC-AUC": auc,
+        })
+        
+    return pd.DataFrame(results).sort_values("F1", ascending=False)
 
 
 def train_knn_model(
