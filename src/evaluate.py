@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+
+import numpy as np
 import pandas as pd
 from sklearn.metrics import (
     accuracy_score,
@@ -10,6 +13,45 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
+
+
+def tune_prediction_threshold(
+    model,
+    X_val: pd.DataFrame,
+    y_val: pd.Series,
+    thresholds: Sequence[float] | None = None,
+) -> pd.DataFrame:
+    """Evaluate multiple decision thresholds for a probabilistic classifier.
+
+    Args:
+        model: A fitted estimator with predict_proba.
+        X_val: Validation features.
+        y_val: Validation labels.
+        thresholds: List of thresholds to test.
+
+    Returns:
+        A DataFrame showing metrics for each threshold.
+    """
+
+    if not hasattr(model, "predict_proba"):
+        raise ValueError("Model must support predict_proba for threshold tuning.")
+
+    if thresholds is None:
+        thresholds = np.arange(0.1, 0.95, 0.05)
+
+    y_prob = model.predict_proba(X_val)[:, 1]
+    results = []
+
+    for t in thresholds:
+        y_pred_t = (y_prob >= t).astype(int)
+        results.append({
+            "threshold": t,
+            "precision": precision_score(y_val, y_pred_t, zero_division=0),
+            "recall": recall_score(y_val, y_pred_t, zero_division=0),
+            "f1": f1_score(y_val, y_pred_t, zero_division=0),
+        })
+
+    return pd.DataFrame(results).sort_values("threshold")
 
 
 def evaluate_model(model, X_test: pd.DataFrame, y_test: pd.Series) -> dict[str, float]:
