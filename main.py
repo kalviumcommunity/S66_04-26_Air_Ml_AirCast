@@ -3,9 +3,9 @@ from __future__ import annotations
 from src.config import Config
 from src.data_preprocessing import clean_data, load_data, split_data, verify_split
 from src.evaluate import evaluate_model
-from src.feature_engineering import add_derived_features, build_preprocessing_pipeline
+from src.feature_engineering import add_derived_features, build_full_pipeline
 from src.persistence import save_artifacts
-from src.train import train_model
+from sklearn.ensemble import RandomForestClassifier
 
 
 def run_workflow(config: Config | None = None) -> dict[str, float]:
@@ -17,11 +17,10 @@ def run_workflow(config: Config | None = None) -> dict[str, float]:
         3. Add derived features
         4. SPLIT into train/test (BEFORE preprocessing)
         5. Verify split (no leakage)
-        6. Fit preprocessing pipeline on training data only
-        7. Apply preprocessing to test data
-        8. Train model on processed training data
-        9. Evaluate on processed test data (never touched before)
-        10. Save artifacts for production
+        6. Build FULL pipeline (preprocessing + model)
+        7. Fit full pipeline on training data only
+        8. Evaluate on test data (never touched before)
+        9. Save artifacts for production
     
     Returns:
         Dictionary of evaluation metrics on the test set.
@@ -50,28 +49,26 @@ def run_workflow(config: Config | None = None) -> dict[str, float]:
     # Step 5: Verify split integrity
     verify_split(X_train, X_test, y_train, y_test)
 
-    # Step 6-7: Build preprocessing pipeline and fit ONLY on training data
-    preprocessing_pipeline = build_preprocessing_pipeline(
-        categorical_columns=settings.categorical_columns,
-        numerical_columns=settings.numerical_columns,
-    )
-    X_train_processed = preprocessing_pipeline.fit_transform(X_train)
-    X_test_processed = preprocessing_pipeline.transform(X_test)
-
-    # Step 8: Train model on processed training data
-    model = train_model(
-        X_train_processed,
-        y_train,
+    # Step 6: Define model
+    model = RandomForestClassifier(
         random_state=settings.random_state,
         n_estimators=settings.n_estimators,
         max_depth=settings.max_depth,
     )
+
+    # Step 7: Build and fit FULL pipeline
+    full_pipeline = build_full_pipeline(
+        categorical_columns=settings.categorical_columns,
+        numerical_columns=settings.numerical_columns,
+        model=model,
+    )
+    full_pipeline.fit(X_train, y_train)
+
+    # Step 8: Evaluate on test data
+    metrics = evaluate_model(full_pipeline, X_test, y_test)
     
-    # Step 9: Evaluate on test data (untouched until now)
-    metrics = evaluate_model(model, X_test_processed, y_test)
-    
-    # Step 10: Save artifacts for production use
-    save_artifacts(model, preprocessing_pipeline, settings.model_path, settings.pipeline_path)
+    # Step 9: Save artifacts for production use
+    save_artifacts(full_pipeline.named_steps["model"], full_pipeline.named_steps["preprocessing"], settings.model_path, settings.pipeline_path)
 
     return metrics
 
