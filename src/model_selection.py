@@ -106,3 +106,28 @@ def tune_model_with_grid_search(
     )
     search.fit(X_train, y_train)
     return search
+
+
+def get_search_results(search: GridSearchCV) -> pd.DataFrame:
+    """Return a DataFrame of search results sorted by rank.
+    
+    Args:
+        search: A fitted GridSearchCV or RandomizedSearchCV object.
+        
+    Returns:
+        A pandas DataFrame containing hyperparameter combinations and scores.
+    """
+
+    results_df = pd.DataFrame(search.cv_results_)
+    # Extract only relevant columns: parameters, mean/std scores, and rank
+    param_cols = [col for col in results_df.columns if col.startswith("param_")]
+    score_cols = [
+        "mean_test_score",
+        "std_test_score",
+        "rank_test_score",
+    ]
+    
+    if "mean_train_score" in results_df.columns:
+        score_cols.append("mean_train_score")
+        
+    return results_df[param_cols + score_cols].sort_values("rank_test_score")
