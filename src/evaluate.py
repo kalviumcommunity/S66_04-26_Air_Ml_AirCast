@@ -70,15 +70,18 @@ def evaluate_model(model, X_test: pd.DataFrame, y_test: pd.Series) -> dict[str, 
     metrics: dict[str, float] = {
         "accuracy": accuracy_score(y_test, predictions),
         "balanced_accuracy": balanced_accuracy_score(y_test, predictions),
-        "precision": precision_score(y_test, predictions, zero_division=0),
-        "recall": recall_score(y_test, predictions, zero_division=0),
-        "f1": f1_score(y_test, predictions, zero_division=0),
+        "precision": precision_score(y_test, predictions, average="weighted", zero_division=0),
+        "recall": recall_score(y_test, predictions, average="weighted", zero_division=0),
+        "f1": f1_score(y_test, predictions, average="weighted", zero_division=0),
     }
 
     if hasattr(model, "predict_proba"):
         probabilities = model.predict_proba(X_test)
         if probabilities.ndim == 2 and probabilities.shape[1] > 1:
-            metrics["roc_auc"] = roc_auc_score(y_test, probabilities[:, 1])
+            if probabilities.shape[1] == 2:
+                metrics["roc_auc"] = roc_auc_score(y_test, probabilities[:, 1])
+            else:
+                metrics["roc_auc"] = roc_auc_score(y_test, probabilities, multi_class="ovr")
 
     return metrics
 
