@@ -9,6 +9,35 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
+def build_full_pipeline(
+    categorical_columns: Sequence[str],
+    numerical_columns: Sequence[str],
+    model: object,
+) -> Pipeline:
+    """Combine preprocessing and a model into a single Pipeline.
+    
+    Args:
+        categorical_columns: Columns for one-hot encoding.
+        numerical_columns: Columns for scaling.
+        model: A scikit-learn compatible estimator.
+        
+    Returns:
+        A complete scikit-learn Pipeline.
+    """
+
+    preprocessing = build_preprocessing_pipeline(
+        categorical_columns=categorical_columns,
+        numerical_columns=numerical_columns,
+    )
+    
+    return Pipeline(
+        steps=[
+            ("preprocessing", preprocessing),
+            ("model", model),
+        ]
+    )
+
+
 def add_derived_features(
     df: pd.DataFrame,
     derived_feature_builders: Mapping[str, Callable[[pd.DataFrame], pd.Series]] | None = None,
