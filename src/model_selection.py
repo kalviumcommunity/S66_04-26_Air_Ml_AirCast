@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import pandas as pd
 from sklearn.base import clone
 from sklearn.inspection import permutation_importance
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -108,7 +110,34 @@ def tune_model_with_grid_search(
     return search
 
 
-def get_search_results(search: GridSearchCV) -> pd.DataFrame:
+def tune_model_with_random_search(
+    estimator,
+    param_distributions: dict[str, Sequence],
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    n_iter: int = 10,
+    scoring: str = "f1",
+    cv: int = 5,
+    random_state: int = 42,
+    n_jobs: int = -1,
+) -> RandomizedSearchCV:
+    """Tune any estimator with RandomizedSearchCV and return fitted search object."""
+
+    safe_estimator = clone(estimator)
+    search = RandomizedSearchCV(
+        estimator=safe_estimator,
+        param_distributions=param_distributions,
+        n_iter=n_iter,
+        scoring=scoring,
+        cv=cv,
+        random_state=random_state,
+        n_jobs=n_jobs,
+    )
+    search.fit(X_train, y_train)
+    return search
+
+
+def get_search_results(search: GridSearchCV | RandomizedSearchCV) -> pd.DataFrame:
     """Return a DataFrame of search results sorted by rank.
     
     Args:
