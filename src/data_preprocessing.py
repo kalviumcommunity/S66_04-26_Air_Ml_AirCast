@@ -178,3 +178,24 @@ def verify_split(
     print(f"    {y_train.value_counts(normalize=True)}")
     print(f"  - Testing target distribution:")
     print(f"    {y_test.value_counts(normalize=True)}")
+
+
+def check_class_imbalance(y: pd.Series) -> pd.DataFrame:
+    """Return counts and percentages for each class in a target Series.
+    
+    Args:
+        y: Target labels.
+        
+    Returns:
+        A DataFrame showing absolute count and relative percentage for each class.
+    """
+
+    counts = y.value_counts()
+    percentages = y.value_counts(normalize=True) * 100
+    
+    imbalance_df = pd.DataFrame({
+        "count": counts,
+        "percentage": percentages
+    })
+    
+    return imbalance_df
