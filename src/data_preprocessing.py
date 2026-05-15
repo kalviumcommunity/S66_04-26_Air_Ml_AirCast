@@ -5,6 +5,7 @@ from collections.abc import Sequence
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import SMOTE
 
 
 def load_data(filepath: str | Path) -> pd.DataFrame:
@@ -199,3 +200,27 @@ def check_class_imbalance(y: pd.Series) -> pd.DataFrame:
     })
     
     return imbalance_df
+
+
+def resample_training_data(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    random_state: int = 42,
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Apply SMOTE oversampling to the training data.
+    
+    Critical Rule: Apply ONLY to training data, never to testing data.
+    
+    Args:
+        X_train: Training features.
+        y_train: Training target labels.
+        random_state: Random seed for reproducibility.
+        
+    Returns:
+        Tuple of (X_resampled, y_resampled).
+    """
+
+    smote = SMOTE(random_state=random_state)
+    X_resampled, y_resampled = smote.fit_resample(X_train, y_train)
+    
+    return X_resampled, y_resampled
